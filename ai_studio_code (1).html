@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Namaz Tarjuma - فولڈر اور ایڈیٹر اسٹوڈیو</title>
+  <style>
+    :root {
+      --green: #0F5D4A; --green-dark: #093E31; --green-light: #E8F5F1;
+      --gold: #C9A227; --gold-light: #FDF6E2; --bg: #F4F7F6;
+      --card: #FFFFFF; --text: #1A2421; --muted: #52635D; --border: #D5E0DC;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0 0 80px 0; background: var(--bg); color: var(--text);
+      font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.75;
+    }
+    header {
+      background: linear-gradient(135deg, var(--green), var(--green-dark));
+      color: #FFF; padding: 12px 14px; border-bottom: 4px solid var(--gold);
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    header h1 { margin: 0; font-size: 1.15rem; }
+    .sub { font-size: 0.82rem; color: #FBE498; }
+    .container { max-width: 980px; margin: 0 auto; padding: 12px; }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tab-btn {
+      flex: 1; min-width: 110px; padding: 9px 10px; border-radius: 12px; border: 1.5px solid var(--border);
+      background: var(--card); color: var(--text); font-family: inherit; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+    }
+    .tab-btn.active { background: var(--green); color: #FFF; border-color: var(--gold); }
+    .panel {
+      display: none; background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px; box-shadow: 0 4px 14px rgba(15,93,74,0.07);
+    }
+    .panel.active { display: block; }
+    .btn {
+      border: none; border-radius: 10px; padding: 9px 13px; font-family: inherit; font-size: 0.9rem;
+      font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--green); color: #FFF; }
+    .btn-gold { background: var(--gold); color: #1A1A1A; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-danger { background: #DC2626; color: #FFF; }
+    .btn-sm { padding: 6px 10px; font-size: 0.83rem; }
+    .folder-box {
+      background: var(--green-light); border: 2px dashed var(--green);
+      border-radius: 14px; padding: 12px; margin-bottom: 14px;
+    }
+    .file-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      background: var(--card); border: 1px solid var(--border); padding: 9px 12px;
+      border-radius: 10px; margin-top: 8px; cursor: pointer;
+    }
+    .file-row.selected { border: 2px solid var(--gold); background: var(--gold-light); }
+    .code-area {
+      width: 100%; min-height: 360px; padding: 12px; border-radius: 12px;
+      border: 2px solid var(--border); background: #0E1715; color: #E2F5EE;
+      font-family: Consolas, 'Courier New', monospace; font-size: 0.88rem;
+      line-height: 1.5; direction: ltr; text-align: left; resize: vertical;
+    }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-weight: 700; margin-bottom: 4px; font-size: 0.95rem; }
+    .input {
+      width: 100%; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--border);
+      font-family: inherit; font-size: 0.98rem; background: #FFF; color: var(--text);
+    }
+    .preview-frame {
+      width: 100%; height: 72vh; border: 2px solid var(--gold); border-radius: 14px; background: #FFF;
+    }
+    .actions-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #111827; color: #FFF; padding: 9px 18px; border-radius: 999px;
+      border: 1px solid var(--gold); font-weight: 700; display: none; z-index: 99;
+    }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <div class="sub">GRS Memorial High School • فولڈر مینیجر اور کوڈ ایڈیٹر</div>
+      <h1>📁 نماز ترجمہ — فولڈر اور ایڈیٹر اسٹوڈیو</h1>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="downloadProjectZip()">📦 پورا فولڈر (.zip) ڈاؤن لوڈ کریں</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab('folder', this)">📁 فولڈر اور فائلیں</button>
+      <button class="tab-btn" onclick="openTab('easy', this)">✨ آسان اردو ایڈیٹر</button>
+      <button class="tab-btn" onclick="openTab('code', this)">✏️ کوڈ ایڈیٹر</button>
+      <button class="tab-btn" onclick="openTab('preview', this)">👁️ لائیو پریویو</button>
+    </div>
+
+    <!-- TAB 1: FOLDER & FILES -->
+    <section id="tab-folder" class="panel active">
+      <div class="actions-bar">
+        <label class="btn btn-primary" style="cursor:pointer;">
+          📂 موبائل سے index.html لوڈ کریں
+          <input type="file" accept=".html,.htm,.json,.txt,.svg" style="display:none;" onchange="importFileFromPhone(event)" />
+        </label>
+        <button class="btn btn-gold" onclick="createNewFile()">➕ نئی فائل بنائیں</button>
+        <button class="btn btn-outline" onclick="downloadProjectZip()">📦 Namaz-Tarjuma-GRS.zip ڈاؤن لوڈ</button>
+      </div>
+
+      <div class="folder-box">
+        <div style="font-weight:800; color:var(--green); font-size:1.05rem;">
+          📂 فولڈر: <span dir="ltr">Namaz-Tarjuma-GRS/</span>
+        </div>
+        <div style="font-size:0.86rem; color:var(--muted);">
+          کسی بھی فائل پر کلک کر کے اسے ایڈٹ یا ڈاؤن لوڈ کریں۔ اوپر والا ZIP بٹن دبانے سے یہ پورا فولڈر ایک ساتھ ڈاؤن لوڈ ہو جائے گا۔
+        </div>
+        <div id="fileList"></div>
+      </div>
+
+      <div style="background:var(--gold-light); border:1px solid var(--gold); border-radius:12px; padding:12px; font-size:0.92rem;">
+        <strong>💡 مشورہ:</strong> اگر آپ نے پہلے سے 22 اسباق والی مکمل <code>index.html</code> محفوظ کر رکھی ہے تو
+        <strong>"موبائل سے index.html لوڈ کریں"</strong> دبا کر اسے یہاں لے آئیں، پھر اس میں نیا سبق شامل کریں اور پورا فولڈر <code>.zip</code> ڈاؤن لوڈ کر لیں!
+      </div>
+    </section>
+
+    <!-- TAB 2: EASY URDU EDITOR -->
+    <section id="tab-easy" class="panel">
+      <h2 style="margin-top:0; color:var(--green); font-size:1.2rem;">🏫 اسکول کا نام اور ایپ کا عنوان بدلیں</h2>
+      <div class="form-group">
+        <label>اسکول / مدرسہ کا نام:</label>
+        <input type="text" id="editSchoolName" class="input" value="جی آر ایس میموریل ہائی اسکول • GRS Memorial High School" />
+      </div>
+      <div class="form-group">
+        <label>ایپ کا عنوان:</label>
+        <input type="text" id="editAppTitle" class="input" value="نماز ترجمہ و صبح و شام کے اذکار" />
+      </div>
+      <button class="btn btn-primary" onclick="applyBrandingToIndex()">✅ نام و عنوان محفوظ کریں</button>
+
+      <hr style="margin:18px 0; border:none; border-top:1px dashed var(--border);" />
+
+      <h2 style="margin-top:0; color:var(--green); font-size:1.2rem;">➕ index.html میں نیا سبق / نئی دعا شامل کریں</h2>
+      <div class="form-group">
+        <label>سبق کا اردو نام:</label>
+        <input type="text" id="newTitleUr" class="input" placeholder="مثال: سونے کی دعا" />
+      </div>
+      <div class="form-group">
+        <label>انگریزی نام:</label>
+        <input type="text" id="newTitleEn" class="input" placeholder="مثال: Dua before Sleeping" />
+      </div>
+      <div class="form-group">
+        <label>عربی الفاظ (ہر لفظ یا ٹکڑے کو <code>|</code> سے الگ کریں):</label>
+        <input type="text" id="newArabicWords" class="input" placeholder="مثال: اَللّٰهُمَّ | بِاسْمِكَ | أَمُوْتُ | وَأَحْيَا" />
+      </div>
+      <div class="form-group">
+        <label>ہر لفظ کا اردو معنی (اسی ترتیب سے <code>|</code> سے الگ کریں):</label>
+        <input type="text" id="newUrduWords" class="input" placeholder="مثال: اے اللہ | تیرے نام سے | میں مرتا ہوں (سوتا ہوں) | اور زندہ ہوتا ہوں (جاگتا ہوں)" />
+      </div>
+      <div class="form-group">
+        <label>مکمل بامحاورہ اردو ترجمہ:</label>
+        <input type="text" id="newFullUr" class="input" placeholder="مثال: اے اللہ! تیرے ہی نام کے ساتھ میں سوتا ہوں اور جاگتا ہوں۔" />
+      </div>
+      <button class="btn btn-gold" onclick="addLessonToIndex()">➕ یہ نیا سبق index.html میں شامل کریں</button>
+    </section>
+
+    <!-- TAB 3: CODE EDITOR -->
+    <section id="tab-code" class="panel">
+      <div class="actions-bar" style="justify-content:space-between; align-items:center;">
+        <strong id="activeFileLabel" dir="ltr">Namaz-Tarjuma-GRS/index.html</strong>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="saveCodeEditor()">💾 محفوظ کریں</button>
+          <button class="btn btn-gold btn-sm" onclick="downloadSingleFile(activeFile)">⬇️ یہ فائل ڈاؤن لوڈ</button>
+          <button class="btn btn-outline btn-sm" onclick="copyCurrentCode()">📋 کاپی</button>
+        </div>
+      </div>
+      <textarea id="codeEditorArea" class="code-area" spellcheck="false"></textarea>
+    </section>
+
+    <!-- TAB 4: LIVE PREVIEW -->
+    <section id="tab-preview" class="panel">
+      <div class="actions-bar">
+        <button class="btn btn-primary btn-sm" onclick="refreshPreview()">🔄 پریویو ریفریش کریں</button>
+        <span style="font-size:0.88rem; color:var(--muted);">آپ کی ترمیم شدہ index.html نیچے چل رہی ہے</span>
+      </div>
+      <iframe id="previewFrame" class="preview-frame" title="Live App Preview"></iframe>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORE_KEY = "grs_folder_editor_v1";
+
+    const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Namaz Tarjuma - GRS Memorial</title>
+  <style>
+    body{font-family:'Jameel Noori Nastaleeq','Segoe UI',sans-serif;background:#F6F8F7;color:#1A2421;margin:0;padding:14px;line-height:1.85}
+    header{background:#0F5D4A;color:#FFF;padding:14px;border-radius:14px;border-bottom:4px solid #C9A227;margin-bottom:14px;text-align:center}
+    .school-name{color:#FBE498;font-size:.9rem;font-weight:700}
+    .card{background:#FFF;border:1.5px solid #C9A227;border-radius:14px;padding:14px;margin-bottom:14px}
+    .words{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+    .wbox{border:1px solid #D5E0DC;border-radius:10px;padding:6px 10px;text-align:center;background:#FAFAFA}
+    .ar{font-size:1.7rem;font-weight:700;color:#0F5D4A}
+    .ur{font-size:.9rem;color:#B91C1C;font-weight:700}
+    .full{background:#EBF4FF;border-right:4px solid #2563EB;color:#1E3A8A;padding:8px 12px;border-radius:8px;font-weight:700}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="school-name">جی آر ایس میموریل ہائی اسکول • GRS Memorial High School</div>
+    <h1 style="margin:4px 0;font-size:1.35rem;">نماز ترجمہ و صبح و شام کے اذکار</h1>
+  </header>
+  <div id="app"></div>
+  <script>
+    const LESSONS = [
+      {
+        id: 1, titleUr: "تکبیرِ تحریمہ", titleEn: "Takbeer-e-Tahreema",
+        lines: [{ words: [{ ar: "اَللّٰهُ", ur: "اللہ" }, { ar: "أَكْبَرُ", ur: "سب سے بڑا ہے" }], fullUr: "اللہ سب سے بڑا ہے۔" }]
+      },
+      {
+        id: 2, titleUr: "تعوذ", titleEn: "Ta'awwuz",
+        lines: [{ words: [{ ar: "أَعُوْذُ", ur: "میں پناہ مانگتا ہوں" }, { ar: "بِاللّٰهِ", ur: "اللہ کی" }, { ar: "مِنَ الشَّيْطَانِ", ur: "شیطان سے" }, { ar: "الرَّجِيْمِ", ur: "مردود" }], fullUr: "میں اللہ کی پناہ مانگتا ہوں شیطان مردود سے۔" }]
+      }
+    ];
+    document.getElementById("app").innerHTML = LESSONS.map(l => \`
+      <div class="card">
+        <h3 style="margin:0;color:#0F5D4A;">سبق \${l.id}: \${l.titleUr}</h3>
+        \${l.lines.map(ln => \`
+          <div class="words">\${ln.words.map(w => \`<div class="wbox"><div class="ar">\${w.ar}</div><div class="ur">\${w.ur}</div></div>\`).join("")}</div>
+          <div class="full">ترجمہ: \${ln.fullUr}</div>
+        \`).join("")}
+      </div>
+    \`).join("");
+  <\/script>
+</body>
+</html>`;
+
+    let files = {
+      "index.html": DEFAULT_INDEX_HTML,
+      "manifest.json": JSON.stringify({
+        name: "Namaz Tarjuma - GRS Memorial",
+        short_name: "Namaz Tarjuma",
+        start_url: "index.html",
+        display: "standalone",
+        background_color: "#0F5D4A",
+        theme_color: "#0F5D4A"
+      }, null, 2),
+      "icon.svg": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">\n  <rect width="120" height="120" rx="26" fill="#0F5D4A"/>\n  <rect x="6" y="6" width="108" height="108" rx="22" fill="none" stroke="#C9A227" stroke-width="4"/>\n  <path d="M62 20c-13 0-23 10-23 22 0 7 4 14 10 18-9-3-15-11-15-21 0-13 11-24 24-24 4 0 8 1 12 3-3-1-5-1-8 2z" fill="#C9A227"/>\n  <path d="M26 72c11-7 23-7 34 0 11-7 23-7 34 0v25c-11-6-23-6-34 0-11-6-23-6-34 0V72z" fill="#FFFDF5" stroke="#C9A227" stroke-width="3"/>\n</svg>`,
+      "README.txt": "Namaz Tarjuma - GRS Memorial High School\n\n1. Open index.html in Chrome/Browser.\n2. Use HTML to APK Builder or htmltoapp.dev with this folder to generate an offline Android APK."
+    };
+
+    let activeFile = "index.html";
+
+    function loadSaved() {
+      try {
+        const raw = localStorage.getItem(STORE_KEY);
+        if (raw) files = { ...files, ...JSON.parse(raw) };
+      } catch(e) {}
+    }
+    function saveAll() {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(files)); } catch(e) {}
+    }
+
+    let toastT = null;
+    function showToast(msg) {
+      const el = document.getElementById("toast"); el.textContent = msg; el.classList.add("show");
+      clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("show"), 2500);
+    }
+
+    function openTab(name, btn) {
+      if (document.getElementById("tab-code").classList.contains("active")) saveCodeEditor(true);
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("tab-" + name).classList.add("active");
+      if (btn) btn.classList.add("active");
+      if (name === "code") loadActiveIntoEditor();
+      if (name === "preview") refreshPreview();
+    }
+
+    function renderFileList() {
+      const box = document.getElementById("fileList");
+      box.innerHTML = Object.keys(files).map(fname => {
+        const sizeKB = (new Blob([files[fname]]).size / 1024).toFixed(1);
+        const isSel = fname === activeFile;
+        return `
+          <div class="file-row ${isSel ? "selected" : ""}" onclick="selectFile('${fname}')">
+            <div>
+              <strong dir="ltr">📄 ${fname}</strong>
+              <span style="font-size:0.8rem; color:var(--muted); margin-right:8px;">(${sizeKB} KB)</span>
+            </div>
+            <div style="display:flex; gap:6px;" onclick="event.stopPropagation()">
+              <button class="btn btn-primary btn-sm" onclick="editFile('${fname}')">✏️ ایڈٹ</button>
+              <button class="btn btn-outline btn-sm" onclick="downloadSingleFile('${fname}')">⬇️</button>
+              ${fname !== "index.html" ? `<button class="btn btn-danger btn-sm" onclick="deleteFile('${fname}')">🗑️</button>` : ""}
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function selectFile(fname) {
+      activeFile = fname;
+      renderFileList();
+    }
+
+    function editFile(fname) {
+      activeFile = fname;
+      renderFileList();
+      openTab("code", document.querySelectorAll(".tab-btn")[2]);
+    }
+
+    function loadActiveIntoEditor() {
+      document.getElementById("activeFileLabel").textContent = "Namaz-Tarjuma-GRS/" + activeFile;
+      document.getElementById("codeEditorArea").value = files[activeFile] || "";
+    }
+
+    function saveCodeEditor(silent) {
+      files[activeFile] = document.getElementById("codeEditorArea").value;
+      saveAll();
+      renderFileList();
+      if (!silent) showToast(activeFile + " محفوظ ہو گئی!");
+    }
+
+    function copyCurrentCode() {
+      const val = document.getElementById("codeEditorArea").value;
+      navigator.clipboard.writeText(val).then(() => showToast("کوڈ کاپی ہو گیا!")).catch(() => showToast("کاپی نہیں ہو سکا"));
+    }
+
+    function createNewFile() {
+      const name = prompt("نئی فائل کا نام لکھیں (مثال: notes.txt یا style.css):");
+      if (!name) return;
+      const clean = name.trim().replace(/[\\/:*?"<>|]/g, "");
+      if (!clean) return;
+      if (!files[clean]) files[clean] = "";
+      activeFile = clean;
+      saveAll(); renderFileList();
+      editFile(clean);
+      showToast("فائل بن گئی: " + clean);
+    }
+
+    function deleteFile(fname) {
+      if (!confirm(`کیا آپ ${fname} حذف کرنا چاہتے ہیں؟`)) return;
+      delete files[fname];
+      if (activeFile === fname) activeFile = "index.html";
+      saveAll(); renderFileList();
+    }
+
+    function importFileFromPhone(ev) {
+      const file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        files[file.name] = reader.result;
+        activeFile = file.name;
+        saveAll(); renderFileList();
+        showToast(file.name + " فولڈر میں لوڈ ہو گئی!");
+      };
+      reader.readAsText(file, "UTF-8");
+      ev.target.value = "";
+    }
+
+    // Easy Urdu Editor Actions
+    function applyBrandingToIndex() {
+      const school = document.getElementById("editSchoolName").value.trim();
+      const title = document.getElementById("editAppTitle").value.trim();
+      let html = files["index.html"];
+      if (school) {
+        html = html.replace(/<div class="school-name">[\s\S]*?<\/div>/, `<div class="school-name">${school}</div>`);
+      }
+      if (title) {
+        html = html.replace(/<h1([^>]*)>[\s\S]*?<\/h1>/, `<h1$1>${title}</h1>`);
+      }
+      files["index.html"] = html;
+      saveAll(); renderFileList();
+      showToast("اسکول کا نام اور عنوان تبدیل ہو گیا!");
+    }
+
+    function addLessonToIndex() {
+      const titleUr = document.getElementById("newTitleUr").value.trim();
+      const titleEn = document.getElementById("newTitleEn").value.trim() || "New Lesson";
+      const arRaw = document.getElementById("newArabicWords").value.trim();
+      const urRaw = document.getElementById("newUrduWords").value.trim();
+      const fullUr = document.getElementById("newFullUr").value.trim();
+
+      if (!titleUr || !arRaw || !fullUr) {
+        showToast("براہ کرم سبق کا نام، عربی الفاظ اور مکمل ترجمہ لکھیں۔");
+        return;
+      }
+
+      const arParts = arRaw.split("|").map(s => s.trim()).filter(Boolean);
+      const urParts = urRaw.split("|").map(s => s.trim());
+      const words = arParts.map((ar, i) => ({ ar, ur: urParts[i] || "", pron: "" }));
+
+      let html = files["index.html"];
+      const idMatches = [...html.matchAll(/\bid\s*:\s*(\d+)/g)].map(m => Number(m[1]));
+      const nextId = idMatches.length ? Math.max(...idMatches) + 1 : 1;
+
+      const newObj = {
+        id: nextId,
+        cat: "azkar",
+        titleUr,
+        titleEn,
+        lines: [{ label: titleUr, words, fullUr }],
+        lughat: words.slice(0, 8).map(w => ({ ar: w.ar, ur: w.ur }))
+      };
+
+      const marker = /const\s+LESSONS\s*=\s*\[/;
+      if (!marker.test(html)) {
+        showToast("index.html میں LESSONS لسٹ نہیں ملی۔");
+        return;
+      }
+
+      // Insert right before closing "];" of LESSONS array
+      const startIdx = html.search(marker);
+      const closeIdx = html.indexOf("];", startIdx);
+      if (closeIdx === -1) {
+        showToast("فائل کی ساخت میں تبدیلی ممکن نہیں۔");
+        return;
+      }
+
+      html = html.slice(0, closeIdx) + ",\n      " + JSON.stringify(newObj) + "\n    " + html.slice(closeIdx);
+      files["index.html"] = html;
+      saveAll(); renderFileList();
+      showToast(`نیا سبق #${nextId} (${titleUr}) شامل ہو گیا!`);
+    }
+
+    function refreshPreview() {
+      const frame = document.getElementById("previewFrame");
+      frame.srcdoc = files["index.html"];
+    }
+
+    function downloadSingleFile(fname) {
+      const blob = new Blob([files[fname] || ""], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = fname;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    }
+
+    // Pure Offline ZIP Generator (Creates Namaz-Tarjuma-GRS/ folder inside ZIP)
+    const CRC_TABLE = (() => {
+      const t = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[i] = c >>> 0;
+      }
+      return t;
+    })();
+    function crc32(bytes) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function downloadProjectZip() {
+      if (document.getElementById("tab-code").classList.contains("active")) saveCodeEditor(true);
+      const enc = new TextEncoder();
+      const localChunks = [], cdChunks = [];
+      let offset = 0, count = 0;
+
+      for (const fname of Object.keys(files)) {
+        const nameBytes = enc.encode("Namaz-Tarjuma-GRS/" + fname);
+        const dataBytes = enc.encode(files[fname]);
+        const crc = crc32(dataBytes);
+
+        const lh = new Uint8Array(30 + nameBytes.length);
+        const lv = new DataView(lh.buffer);
+        lv.setUint32(0, 0x04034b50, true);
+        lv.setUint16(4, 20, true);
+        lv.setUint16(6, 0x0800, true);
+        lv.setUint16(8, 0, true);
+        lv.setUint16(10, 0, true);
+        lv.setUint16(12, 0x5421, true);
+        lv.setUint32(14, crc, true);
+        lv.setUint32(18, dataBytes.length, true);
+        lv.setUint32(22, dataBytes.length, true);
+        lv.setUint16(26, nameBytes.length, true);
+        lv.setUint16(28, 0, true);
+        lh.set(nameBytes, 30);
+
+        localChunks.push(lh, dataBytes);
+
+        const cd = new Uint8Array(46 + nameBytes.length);
+        const cv = new DataView(cd.buffer);
+        cv.setUint32(0, 0x02014b50, true);
+        cv.setUint16(4, 20, true);
+        cv.setUint16(6, 20, true);
+        cv.setUint16(8, 0x0800, true);
+        cv.setUint16(10, 0, true);
+        cv.setUint16(12, 0, true);
+        cv.setUint16(14, 0x5421, true);
+        cv.setUint32(16, crc, true);
+        cv.setUint32(20, dataBytes.length, true);
+        cv.setUint32(24, dataBytes.length, true);
+        cv.setUint16(28, nameBytes.length, true);
+        cv.setUint16(30, 0, true);
+        cv.setUint16(32, 0, true);
+        cv.setUint16(34, 0, true);
+        cv.setUint16(36, 0, true);
+        cv.setUint32(38, 0, true);
+        cv.setUint32(42, offset, true);
+        cd.set(nameBytes, 46);
+
+        cdChunks.push(cd);
+        offset += lh.length + dataBytes.length;
+        count++;
+      }
+
+      const cdSize = cdChunks.reduce((s, c) => s + c.length, 0);
+      const eocd = new Uint8Array(22);
+      const ev = new DataView(eocd.buffer);
+      ev.setUint32(0, 0x06054b50, true);
+      ev.setUint16(4, 0, true);
+      ev.setUint16(6, 0, true);
+      ev.setUint16(8, count, true);
+      ev.setUint16(10, count, true);
+      ev.setUint32(12, cdSize, true);
+      ev.setUint32(16, offset, true);
+      ev.setUint16(20, 0, true);
+
+      const blob = new Blob([...localChunks, ...cdChunks, eocd], { type: "application/zip" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "Namaz-Tarjuma-GRS.zip";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      showToast("پورا فولڈر Namaz-Tarjuma-GRS.zip ڈاؤن لوڈ ہو گیا!");
+    }
+
+    loadSaved();
+    renderFileList();
+  </script>
+</body>
+</html>
